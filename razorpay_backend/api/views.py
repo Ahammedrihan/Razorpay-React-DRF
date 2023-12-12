@@ -10,13 +10,20 @@ from rest_framework.response import Response
 from .models import Order
 from .serializers import OrderSerializer
 
-env = environ.Env()
-environ.Env.read_env()
+# env = environ.Env()
+# environ.Env.read_env()
 
+from dotenv import load_dotenv
+import os
+
+
+load_dotenv()
+
+@api_view(['POST'])
 def start_payment(request):
     amount = request.data['amount']
     name = request.data['name']
-    client = razorpay.Client(auth=(env('PUBLIC_KEY'),env('SECRET_KEY')))
+    client = razorpay.Client(auth=(os.environ['PUBLIC_KEY'],os.environ['SECRET_KEY']))
     payment = client.order.create({"amount":int(amount)*100,
                                    "currency": "INR", 
                                    "payment_capture": "1"})
@@ -30,7 +37,7 @@ def start_payment(request):
         "order": serializer.data
     }
     return Response(data)
-
+@api_view(['POST'])
 
 def handle_payment_success(request):
     res = json.loads(request.data["response"])
@@ -54,7 +61,7 @@ def handle_payment_success(request):
         'razorpay_payment_id': raz_pay_id,
         'razorpay_signature': raz_signature
     }
-    client = razorpay.Client(auth=(env('PUBLIC_KEY'), env('SECRET_KEY')))
+    client = razorpay.Client(auth=(os.environ['PUBLIC_KEY'],os.environ['SECRET_KEY']))
     check = client.utility.verify_payment_signature(data)
 
     if check is not None:
